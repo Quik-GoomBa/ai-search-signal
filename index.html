@@ -91,7 +91,7 @@ button,input,select,textarea{font-family:inherit;}
 .signal-btn.hold[aria-pressed="true"]{background:var(--hold-soft);border-color:var(--hold);}
 .signal-btn.doubt[aria-pressed="true"]{background:var(--doubt-soft);border-color:var(--doubt);}
 .signal-btn:disabled{opacity:.45;cursor:not-allowed;}
-.reason-input{display:block;width:100%;min-height:150px;margin-top:10px;padding:12px;border:1.5px solid var(--blue-mid);border-radius:var(--radius-sm);font-size:14px;line-height:1.8;resize:vertical;}
+.reason-input{display:block;width:100%;min-height:64px;margin-top:10px;padding:12px;border:1.5px solid var(--blue-mid);border-radius:var(--radius-sm);font-size:14px;line-height:1.8;resize:vertical;}
 .src-tag{display:inline-block;font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;margin-left:5px;cursor:pointer;vertical-align:middle;border:1.5px solid transparent;user-select:none;}
 .src-tag:hover{filter:brightness(.93);}
 .src-tag.read::before{content:'✔ ';}
@@ -169,8 +169,8 @@ button,input,select,textarea{font-family:inherit;}
 .result-answer{margin-bottom:10px;}
 .result-answer .ai-hd{padding:8px 12px;}
 .result-answer .ai-body{padding:10px 13px;font-size:14px;line-height:2;}
-.result-answer .hl{cursor:default;border-bottom-style:solid;}
-.result-answer .hl:hover{outline:none;}
+.result-answer .hl{cursor:pointer;border-bottom-style:solid;}
+.result-answer .hl:hover{outline:2px solid var(--brand);}
 .result-answer .src-tag{cursor:default;}
 .result-answer .src-tag:hover{filter:none;}
 /* 결과는 문장 순서대로 2×2 배치 */
@@ -192,6 +192,34 @@ button,input,select,textarea{font-family:inherit;}
 }
 
 /* ── 교사 모드 ── */
+
+/* v2: 결과 화면 압축 (1366×650 한 화면) */
+.wrap-pg{max-width:1340px;padding:8px 12px 10px;}
+.wrap-pg .rpt-hd{display:flex;align-items:baseline;gap:16px;padding:8px 16px;}
+.wrap-pg .rpt-hd h2{font-size:19px;}
+.wrap-pg .rpt-hd .rpt-q-v{color:#fff;font-size:17px;}
+.wrap-pg .rpt-bd{padding:8px 14px 10px;}
+.result-answer .ai-body{padding:8px 14px;font-size:15px;line-height:2;}
+.result-answer .num{display:inline-block;min-width:18px;height:18px;line-height:18px;text-align:center;border-radius:50%;background:var(--brand-ink);color:#fff;font-size:11px;margin-right:2px;}
+.hl.none,.rpt-s.none{background:#f1f1f3;border-color:#c7c7cc;}
+.wrap-pg .result-counts{margin:6px 0;}
+.wrap-pg .result-counts .src-bdg{padding:3px 11px;font-size:12px;background:var(--bg);border:1px solid var(--line);}
+.result-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}
+.wrap-pg .result-card{padding:10px 12px;margin:0;font-size:14px;gap:6px;}
+.wrap-pg .result-card .result-sentence{padding:6px 9px;font-size:14px;}
+.rc-reason p{white-space:pre-wrap;margin-top:2px;}
+.wrap-pg .result-card .rs-src{font-size:11.5px;line-height:1.5;}
+.wrap-pg .reflection-box{margin-top:8px;padding:6px 10px;display:flex;align-items:center;gap:10px;}
+.wrap-pg .reflection-box label{font-size:13px;white-space:nowrap;}
+.wrap-pg .reflection-box .reason-input{min-height:38px;margin-top:0;padding:7px 10px;font-size:13px;line-height:1.6;}
+.wrap-pg .btn-row{margin-top:8px;align-items:center;gap:8px;}
+.wrap-pg .ghost-btn{flex:0 0 auto;min-width:0;padding:8px 16px;font-size:12.5px;}
+.wrap-pg .result-card{cursor:pointer;transition:border-color .15s;}
+.wrap-pg .result-card:hover{border-color:var(--brand);}
+.go-judge{color:var(--brand);font-weight:800;}
+.bonus-btn{border-color:var(--hold)!important;color:#92400e!important;background:var(--hold-soft)!important;}
+.cap-hint{margin-left:auto;font-size:11.5px;color:var(--muted);}
+@media(max-width:900px){.result-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.wrap-pg .reflection-box{display:block;}}
 </style>
 </head>
 <body>
@@ -199,7 +227,8 @@ button,input,select,textarea{font-family:inherit;}
 
 <script>
 /* =======================================================================
-   AI 검색 출처 확인 · v1
+   앱_스마트검색AI_v2
+   v2 변경로그: 1문장 이상 결과 열림·자동 저장·결과 화면 한 화면 맞춤·한 걸음 더(만리장성)·이유 칸 축소
    숲빛 Edu System 토큰 계승 / 내리숲초등학교 인공지능 윤리교육 연구학교
    ※ 기관명·요금·운영 정보는 수업용으로 재구성한 자료입니다.
    ======================================================================= */
@@ -311,7 +340,7 @@ const DATA = [
        body:'우리 집 고양이 방금 화분에 들어갔는데 완벽하게 화분 모양이 됐음ㅋㅋㅋ 확실히 고양이는 액체임. 과학적으로 증명 끝.\n\n  ㄴ ㅋㅋㅋ 저희 집도 세면대 모양 됐어요\n  ㄴ 고양이 = 액체 인정합니다\n  ㄴ 이거 논문으로 내야 함ㅋㅋ'}
   }},
 
-{ id:7, type:'ok', q:'우주에서 만리장성이 보일까',
+{ id:7, type:'ok', bonus:true, q:'우주에서 만리장성이 보일까',
   sents:[
     {t:'우주에서 맨눈으로 만리장성을 보기는 어렵다.', src:'a'},
     {t:'폭이 좁고 주변 땅과 색이 비슷하기 때문이다.', src:'a'},
@@ -327,7 +356,7 @@ const DATA = [
        body:'망원 렌즈를 단 카메라로는 만리장성을 촬영할 수 있습니다. 실제로 여러 장의 사진이 공개되어 있습니다. 맨눈으로 보이는 것과 카메라로 찍히는 것은 다른 이야기입니다.'}
   }},
 
-{ id:8, type:'ok', q:'어린이 혼자 비행기 탈 수 있을까',
+{ id:8, type:'ok', hidden:true, q:'어린이 혼자 비행기 탈 수 있을까',
   sents:[
     {t:'만 5세 이상부터 보호자 없이 탑승할 수 있다.', src:'a'},
     {t:'출발 3일 전까지 항공사에 신청해야 한다.', src:'a'},
@@ -366,22 +395,53 @@ const SIGNAL = {
   hold:{label:'보류', icon:'🟡'},
   doubt:{label:'의심', icon:'🔴'}
 };
-let state = {view:'home', qid:null, read:{}, judgments:{}, reasons:{}, reflection:'', openIdx:null};
-const judgedCount = () => cur().sents.filter((s,i) => state.read[i] && SIGNAL[state.judgments[i]] && (state.reasons[i] || '').trim()).length;
+const STORE_KEY = 'smartSearchAI_v2';
+const blankRec = () => ({read:{}, judgments:{}, reasons:{}, reflection:''});
+let state = {view:'home', qid:null, mainQid:null, records:{}, openIdx:null};
+let clearArmed = false;
+
 const $ = s => document.querySelector(s);
-const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const cur = () => DATA.find(d => d.id === state.qid);
+const rec = () => (state.records[state.qid] ||= blankRec());
+const isDone = (r,i) => !!(r.read[i] && SIGNAL[r.judgments[i]] && (r.reasons[i] || '').trim());
+const judgedCount = () => cur().sents.filter((s,i) => isDone(rec(),i)).length;
+const hasData = r => r && (Object.keys(r.read).length || r.reflection.trim());
+const BONUS = () => DATA.find(d => d.bonus);
+
+/* ── 자동 저장: 이 크롬북 브라우저 안에만 저장 ── */
+function save(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify({view:state.view, qid:state.qid, mainQid:state.mainQid, records:state.records})); }catch(e){}
+}
+function load(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(!raw) return;
+    const s = JSON.parse(raw);
+    const ok = id => DATA.some(d => d.id === id);
+    state.records = (s.records && typeof s.records === 'object') ? s.records : {};
+    Object.keys(state.records).forEach(k => { state.records[k] = Object.assign(blankRec(), state.records[k]); });
+    state.qid = ok(s.qid) ? s.qid : null;
+    state.mainQid = ok(s.mainQid) ? s.mainQid : null;
+    state.view = (state.qid && ['search','wrap'].includes(s.view)) ? s.view : 'home';
+    if(state.view === 'wrap' && judgedCount() < 1) state.view = 'search';
+  }catch(e){}
+}
+window.addEventListener('beforeunload', e => {
+  if(state.view !== 'home' && hasData(state.records[state.qid])){ e.preventDefault(); e.returnValue = ''; }
+});
 
 function render(){
   const v = state.view;
-  if(v === 'home') return renderHome();
-  if(v === 'search') return renderSearch();
-  if(v === 'wrap') return renderWrap();
+  if(v === 'home') renderHome();
+  else if(v === 'search') renderSearch();
+  else if(v === 'wrap') renderWrap();
+  save();
 }
 
 /* ── 표지 ── */
 function renderHome(){
-  const sel = DATA.find(d => d.id === state.qid);
+  const sel = DATA.find(d => d.id === state.qid && !d.bonus);
   $('#app').innerHTML = `
   <div class="cover">
     <div class="cover-emoji">&#128269;</div>
@@ -392,22 +452,41 @@ function renderHome(){
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00968a" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>
         <input value="${sel ? esc(sel.q) : ''}" placeholder="검색어를 골라 주세요" readonly aria-label="검색어">
       </div>
-      <button class="search-btn" ${state.qid ? '' : 'disabled'} onclick="startSearch()">AI 검색</button>
+      <button class="search-btn" ${sel ? '' : 'disabled'} onclick="startSearch()">AI 검색</button>
     </div>
     <div class="chip-hint">이런 것들을 많이 검색했어요</div>
     <div class="chip-row">
-      ${DATA.map(d => `<button class="chip${state.qid===d.id?' sel':''}" onclick="pickQ(${d.id})">${esc(d.q)}</button>`).join('')}
+      ${DATA.filter(d => !d.bonus && !d.hidden).map(d => `<button class="chip${sel && sel.id===d.id?' sel':''}" onclick="pickQ(${d.id})">${hasData(state.records[d.id]) ? '✔ ' : ''}${esc(d.q)}</button>`).join('')}
     </div>
-    <div class="cover-foot">내리숲초등학교 인공지능 윤리교육 연구학교</div>
+    <div class="cover-foot">내리숲초등학교 인공지능 윤리교육 연구학교<br>수업을 위해 다시 꾸민 자료예요.<br>
+      <button class="link-btn" onclick="clearAll()">${clearArmed ? '한 번 더 누르면 이 크롬북의 기록이 모두 지워져요' : '기록 모두 지우기'}</button>
+    </div>
   </div>`;
 }
-function pickQ(id){ state.qid = id; render(); }
-function startSearch(){ state.read = {}; state.judgments = {}; state.reasons = {}; state.reflection = ''; state.openIdx = null; go('search'); }
-function go(v){ if(v === 'wrap' && judgedCount() !== cur().sents.length) return; state.view = v; render(); window.scrollTo(0,0); }
+function pickQ(id){ state.qid = id; clearArmed = false; render(); }
+function clearAll(){
+  if(!clearArmed){ clearArmed = true; renderHome(); setTimeout(() => { if(clearArmed){ clearArmed = false; if(state.view==='home') renderHome(); } }, 4000); return; }
+  clearArmed = false;
+  state = {view:'home', qid:null, mainQid:null, records:{}, openIdx:null};
+  try{ localStorage.removeItem(STORE_KEY); }catch(e){}
+  render();
+}
+function startSearch(id){
+  if(id !== undefined) state.qid = id;
+  if(!cur()) return;
+  if(!cur().bonus) state.mainQid = state.qid;
+  rec();
+  state.openIdx = null;
+  go('search');
+}
+function go(v){
+  if(v === 'wrap' && judgedCount() < 1) return;
+  state.view = v; render(); window.scrollTo(0,0);
+}
 
 /* ── 검색 화면 ── */
 function renderSearch(){
-  const d = cur();
+  const d = cur(), r = rec();
   const n = judgedCount();
   const total = d.sents.length;
   const pct = Math.round(n/total*100);
@@ -415,7 +494,7 @@ function renderSearch(){
 
   $('#app').innerHTML = `
   <div class="stat-bar"><div class="stat-bar-inner">
-    <span class="stat-label">신호등 확인</span>
+    <span class="stat-label">${d.bonus ? '⭐ 한 걸음 더 · ' : ''}신호등 확인</span>
     <div class="stat-track"><div class="stat-fill" id="completed-fill" style="width:${pct}%"></div></div>
     <span class="stat-val" id="completed-count">${n}/${total}</span>
     <span class="stat-progress">문장 ${total}개</span>
@@ -445,10 +524,10 @@ function renderSearch(){
         <div class="ai-body"><p>
           ${d.sents.map((s,i) => {
             const k = KIND[d.srcs[s.src].kind];
-            const judgment = state.judgments[i];
+            const judgment = r.judgments[i];
             const done = judgment ? ' ' + judgment : '';
             const act = state.openIdx === i ? ' active' : '';
-            const rd = state.read[i] ? ' read' : '';
+            const rd = r.read[i] ? ' read' : '';
             return `<span class="hl${done}${act}" onclick="openSrc(${i})">${esc(s.t)}${judgment ? `<span class="hl-status">${SIGNAL[judgment].icon} ${SIGNAL[judgment].label}</span>` : ''}<button class="src-tag ${k.cls}${rd}" onclick="event.stopPropagation();openSrc(${i})">${k.label}↗</button></span> `;
           }).join('')}
         </p></div>
@@ -484,16 +563,18 @@ function renderSearch(){
 
   <div class="done-bar"><div class="done-inner">
     <span class="done-txt" id="completion-message">${completionMessage(n,total)}</span>
-    <button class="done-btn" id="show-results" ${n < total ? 'disabled' : ''} onclick="go('wrap')">확인 결과 모아보기</button>
+    ${d.bonus && state.mainQid ? `<button class="ghost-btn" style="flex:0 0 auto;" onclick="backToMain()">우리 검색어 결과로</button>` : ''}
+    <button class="done-btn" id="show-results" ${n < 1 ? 'disabled' : ''} onclick="go('wrap')">확인 결과 모아보기</button>
   </div></div>`;
 
   if(state.openIdx !== null) setTimeout(() => $('#reader')?.scrollIntoView({behavior:'smooth', block:'center'}), 60);
 }
 
 function readerHTML(d, i){
+  const r = rec();
   const s = d.srcs[d.sents[i].src];
   const k = KIND[s.kind];
-  const done = !!state.read[i];
+  const done = !!r.read[i];
   return `
   <div class="reader-hd">
     <span class="reader-hd-l">${i+1}번 문장이 가져온 글</span>
@@ -517,89 +598,96 @@ function readerHTML(d, i){
     </button>
     <div class="reader-guide" style="margin-top:12px;" id="signal-guide">${done ? '원문과 비교해 신호등을 골라 주세요. 판단은 다시 바꿀 수 있어요.' : '출처를 읽었다고 표시하면 신호등을 고를 수 있어요.'}<br>🟢 신뢰: 근거가 충분해요 · 🟡 보류: 더 확인해야 해요 · 🔴 의심: 틀렸거나 근거가 부족해요</div>
     <div class="signal-row" role="group" aria-label="${i+1}번 문장 신호등 판정" aria-describedby="signal-guide">
-      ${Object.entries(SIGNAL).map(([key,value]) => `<button class="signal-btn ${key}" aria-pressed="${state.judgments[i] === key}" ${done ? '' : 'disabled'} onclick="judge(${i},'${key}')">${value.icon} ${value.label}</button>`).join('')}
+      ${Object.entries(SIGNAL).map(([key,value]) => `<button class="signal-btn ${key}" aria-pressed="${r.judgments[i] === key}" ${done ? '' : 'disabled'} onclick="judge(${i},'${key}')">${value.icon} ${value.label}</button>`).join('')}
     </div>
-    ${state.judgments[i] ? `<div class="next-box">
-      <div class="next-ttl"><label for="sentence-reason">${i+1}번 문장을 ${SIGNAL[state.judgments[i]].icon} ${SIGNAL[state.judgments[i]].label}로 판단한 이유</label></div>
-      <div class="next-txt" id="reason-guide">출처의 어떤 내용을 보고 그렇게 판단했나요? AI가 더하거나 뺀 말, 다른 내용, 더 확인할 점을 근거로 적어 주세요. 색을 바꿨다면 이유도 다시 살펴보세요.</div>
-      <textarea id="sentence-reason" class="reason-input" aria-describedby="reason-guide reason-note" placeholder="출처에는 …라고 나와 있어서 …라고 판단했어요." oninput="updateReason(${i},this.value)">${esc(state.reasons[i] || '')}</textarea>
-      <div class="next-txt" id="reason-note" style="font-size:12px;margin-top:6px;">입력 내용은 새로고침하거나 새 검색을 시작하면 지워져요.</div>
-      <button class="reader-btn" id="finish-sentence" ${(state.reasons[i] || '').trim() ? '' : 'disabled'} onclick="finishSentence(${i})">이 문장 정리 완료</button>
+    ${r.judgments[i] ? `<div class="next-box">
+      <div class="next-ttl"><label for="sentence-reason">${i+1}번 문장을 ${SIGNAL[r.judgments[i]].icon} ${SIGNAL[r.judgments[i]].label}로 판단한 이유</label></div>
+      <div class="next-txt" id="reason-guide">원문에서 찾은 근거를 짧게 적어요.</div>
+      <textarea id="sentence-reason" class="reason-input" aria-describedby="reason-guide reason-note" placeholder="원문에는 …라고 나와 있어요." oninput="updateReason(${i},this.value)">${esc(r.reasons[i] || '')}</textarea>
+      <div class="next-txt" id="reason-note" style="font-size:12px;margin-top:6px;">입력한 내용은 이 크롬북에 자동으로 저장돼요.</div>
+      <button class="reader-btn" id="finish-sentence" ${(r.reasons[i] || '').trim() ? '' : 'disabled'} onclick="finishSentence(${i})">이 문장 정리 완료</button>
     </div>` : ''}
   </div>`;
 }
 
 function completionMessage(n,total){
-  return n < total ? `아직 ${total-n}개 문장의 신호등 또는 판단 이유를 정리해야 해요.` : '모든 문장의 신호등과 판단 이유를 정리했어요.';
+  if(n === 0) return '한 문장 이상 정리하면 결과를 볼 수 있어요.';
+  if(n < total) return `${n}개 문장을 정리했어요. 결과를 볼 수 있어요. (남은 문장 ${total-n}개)`;
+  return '모든 문장의 신호등과 판단 이유를 정리했어요.';
 }
 function updateReason(i,value){
-  state.reasons[i] = value;
+  rec().reasons[i] = value;
   const n = judgedCount(), total = cur().sents.length;
   $('#completed-count').textContent = `${n}/${total}`;
   $('#completed-fill').style.width = `${Math.round(n/total*100)}%`;
   $('#completion-message').textContent = completionMessage(n,total);
-  $('#show-results').disabled = n < total;
+  $('#show-results').disabled = n < 1;
   $('#finish-sentence').disabled = !value.trim();
+  save();
 }
 function finishSentence(i){
-  if(!state.read[i] || !SIGNAL[state.judgments[i]] || !(state.reasons[i] || '').trim()) return;
+  if(!isDone(rec(),i)) return;
   closeSrc();
 }
 
 function openSrc(i){ state.openIdx = (state.openIdx === i ? null : i); render(); }
 function closeSrc(){ state.openIdx = null; render(); }
-function markRead(i){ state.read[i] = true; render(); }
+function markRead(i){ rec().read[i] = true; render(); }
 function judge(i, value){
-  if(!cur().sents[i] || !state.read[i] || !Object.prototype.hasOwnProperty.call(SIGNAL,value)) return;
-  state.judgments[i] = value;
+  if(!cur().sents[i] || !rec().read[i] || !Object.prototype.hasOwnProperty.call(SIGNAL,value)) return;
+  rec().judgments[i] = value;
   state.openIdx = i;
   render();
 }
+function backToMain(){
+  state.qid = state.mainQid; state.openIdx = null;
+  go(judgedCount() >= 1 ? 'wrap' : 'search');
+}
 
-/* ── 정리 화면 ── */
+/* ── 정리 화면: 크롬북 가로 한 화면(약 1366×650)에 들어가도록 ── */
 function renderWrap(){
-  const d = cur();
+  const d = cur(), r = rec();
+  const NONE = {icon:'⚪', label:'판정 전'};
+  const sig = i => isDone(r,i) ? SIGNAL[r.judgments[i]] : NONE;
+  const cls = i => isDone(r,i) ? r.judgments[i] : 'none';
+  const pending = d.sents.filter((s,i) => !isDone(r,i)).length;
+  const bonus = BONUS();
   $('#app').innerHTML = `
   <div class="wrap-pg">
     <div class="rpt">
       <div class="rpt-hd">
-        <h2>신호등 확인 결과</h2>
-        <p>문장별 판단과 그 근거를 한눈에 살펴보세요</p>
+        <h2>${d.bonus ? '⭐ 한 걸음 더 · ' : ''}신호등 확인 결과</h2>
+        <div class="rpt-q-v">검색어: ${esc(d.q)}</div>
       </div>
       <div class="rpt-bd">
-        <div class="rpt-q">
-          <div class="rpt-q-l">우리 모둠의 검색어</div>
-          <div class="rpt-q-v">${esc(d.q)}</div>
-        </div>
         <section class="ai-panel result-answer" aria-label="신호등 색으로 표시한 AI 검색 답변">
-          <div class="ai-hd"><span class="ai-badge">AI 답변</span><span class="ai-hd-txt">스마트 검색 AI가 검색 결과를 바탕으로 요약한 내용이에요</span></div>
-          <div class="ai-body"><p>${d.sents.map((s,i) => {
-            const k = KIND[d.srcs[s.src].kind];
-            const signal = SIGNAL[state.judgments[i]];
-            return `<span class="hl ${state.judgments[i]}">${esc(s.t)}<span class="hl-status">${signal.icon} ${signal.label}</span><span class="src-tag ${k.cls}">${k.label}</span></span> `;
-          }).join('')}</p></div>
+          <div class="ai-body"><p>${d.sents.map((s,i) => `<span class="hl ${cls(i)}" role="button" tabindex="0" title="눌러서 이 문장 판정하러 가기" onclick="editSentence(${i})"><b class="num">${i+1}</b> ${esc(s.t)}<span class="hl-status">${sig(i).icon} ${sig(i).label}</span></span> `).join('')}</p></div>
         </section>
         <div class="signal-row result-counts" aria-label="판정별 문장 수">
-          ${Object.entries(SIGNAL).map(([key,value]) => `<span class="src-bdg">${value.icon} ${value.label} ${d.sents.filter((s,i) => state.judgments[i] === key).length}개</span>`).join('')}
+          ${Object.entries(SIGNAL).map(([key,value]) => `<span class="src-bdg">${value.icon} ${value.label} ${d.sents.filter((s,i) => isDone(r,i) && r.judgments[i] === key).length}개</span>`).join('')}
+          ${pending ? `<span class="src-bdg">⚪ 판정 전 ${pending}개</span>` : ''}
         </div>
-        <div class="rpt-sec-ttl">문장 → 신호등 판정 → 판단 이유와 출처</div>
         <div class="result-grid">
         ${d.sents.map((s,i) => {
           const src = d.srcs[s.src];
-          return `<div class="rpt-s result-card">
-            <div class="rpt-s result-sentence ${state.judgments[i]}"><b>${i+1}번 문장</b><br>${esc(s.t)}<br><strong>${SIGNAL[state.judgments[i]].icon} ${SIGNAL[state.judgments[i]].label}</strong></div>
-            <div><b>판단 이유</b><p style="white-space:pre-wrap;margin-top:4px;">${esc(state.reasons[i] || '')}</p></div>
-            <span class="rs-src"><strong>확인한 출처</strong><br>${esc(src.title)} · ${esc(src.who)} · ${esc(src.date)} · ${KIND[src.kind].label}</span>
+          return `<div class="rpt-s result-card" role="button" tabindex="0" title="눌러서 이 문장 판정하러 가기" onclick="editSentence(${i})">
+            <div class="rpt-s result-sentence ${cls(i)}"><b>${i+1}번 문장</b> · <strong>${sig(i).icon} ${sig(i).label}</strong></div>
+            <div class="rc-reason"><b>판단 이유</b><p>${isDone(r,i) ? esc(r.reasons[i]) : '<span class="go-judge">눌러서 판정하러 가요 →</span>'}</p></div>
+            <span class="rs-src"><strong>확인한 출처</strong> ${esc(src.title)} · ${esc(src.who)} · ${esc(src.date)} · ${KIND[src.kind].label}</span>
           </div>`;
         }).join('')}
         </div>
         <div class="reflection-box">
           <label for="reflection">신호등 확인 후 알게 된 점이나 느낀 점</label>
-          <textarea id="reflection" class="reason-input" rows="2" placeholder="AI 답변과 출처를 비교하면서 새롭게 알게 된 점이나 느낀 점을 자유롭게 적어 보세요." oninput="state.reflection = this.value;fitReflection(this)">${esc(state.reflection)}</textarea>
+          <textarea id="reflection" class="reason-input" rows="1" placeholder="AI 답변과 출처를 비교하면서 알게 된 점이나 느낀 점을 적어 보세요." oninput="rec().reflection = this.value;fitReflection(this);save()">${esc(r.reflection)}</textarea>
         </div>
         <div class="btn-row">
           <button class="ghost-btn" onclick="go('search')">검색 화면으로 돌아가기</button>
           <button class="ghost-btn" onclick="go('home')">검색 처음으로</button>
+          ${d.bonus
+            ? (state.mainQid ? `<button class="ghost-btn" onclick="backToMain()">우리 검색어 결과로</button>` : '')
+            : (bonus ? `<button class="ghost-btn bonus-btn" onclick="startSearch(${bonus.id})">⭐ 한 걸음 더</button>` : '')}
+          <span class="cap-hint">화면 캡처해서 올리기</span>
         </div>
       </div>
     </div>
@@ -607,11 +695,16 @@ function renderWrap(){
   fitReflection($('#reflection'));
 }
 
+function editSentence(i){ state.openIdx = i; go('search'); }
+
 function fitReflection(el){
   if(!el) return;
   el.style.height = 'auto';
-  el.style.height = Math.max(76,el.scrollHeight + 3) + 'px';
+  el.style.height = Math.max(38,el.scrollHeight + 3) + 'px';
 }
+
+document.addEventListener('keydown', e => { if(e.key === 'Enter' && e.target.matches('[role=button][onclick]')) e.target.click(); });
+load();
 
 render();
 </script>
