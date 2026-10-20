@@ -143,6 +143,8 @@ button,input,select,textarea{font-family:inherit;}
 .done-btn{background:var(--brand);color:#fff;border:0;border-radius:999px;padding:12px 26px;font-size:14px;font-weight:900;cursor:pointer;}
 .done-btn:disabled{background:var(--line);color:var(--muted);cursor:not-allowed;}
 .done-btn:not(:disabled):hover{filter:brightness(1.08);}
+.done-inner .home-btn{flex:0 0 auto;min-width:0;padding:11px 18px;}
+.main-wrap{padding-bottom:90px;}
 
 /* ── 정리 화면 ── */
 .wrap-pg{max-width:1180px;margin:0 auto;padding:14px 16px 20px;animation:stageIn .35s ease both;}
@@ -228,6 +230,7 @@ button,input,select,textarea{font-family:inherit;}
 <script>
 /* =======================================================================
    앱_스마트검색AI_v3
+   v3.1: 검색 화면 왼쪽 아래 '검색 처음으로' 버튼 추가(기록은 그대로 유지)
    v3 변경로그: 7개 주제 검색 결과 데이터 전면 개편(원문 3문장 내외·블로그/질문답변/광고 가짜 정보 추가)·🟢 신뢰는 이유 입력 없이 완료
    (v2: 1문장 이상 결과 열림·자동 저장·결과 화면 한 화면 맞춤·한 걸음 더(만리장성)·이유 칸 축소)
    숲빛 Edu System 토큰 계승 / 내리숲초등학교 인공지능 윤리교육 연구학교
@@ -572,6 +575,7 @@ function renderSearch(){
   </div>
 
   <div class="done-bar"><div class="done-inner">
+    <button class="ghost-btn home-btn" onclick="goHome()">🏠 검색 처음으로</button>
     <span class="done-txt" id="completion-message">${completionMessage(n,total)}</span>
     ${d.bonus && state.mainQid ? `<button class="ghost-btn" style="flex:0 0 auto;" onclick="backToMain()">우리 검색어 결과로</button>` : ''}
     <button class="done-btn" id="show-results" ${n < 1 ? 'disabled' : ''} onclick="go('wrap')">확인 결과 모아보기</button>
@@ -653,6 +657,7 @@ function judge(i, value){
   state.openIdx = i;
   render();
 }
+function goHome(){ state.openIdx = null; go('home'); }
 function backToMain(){
   state.qid = state.mainQid; state.openIdx = null;
   go(judgedCount() >= 1 ? 'wrap' : 'search');
